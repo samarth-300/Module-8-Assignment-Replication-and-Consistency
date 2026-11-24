@@ -1,0 +1,20 @@
+=== Module 8: Replication & Consistency ===
+READ     initial state          Primary=10 (v0) | Secondary=10 (v0)
+
+--- 1. Normal replication ---
+WRITE  Primary   stock=8 version=1
+REPLICATE Secondary stock=8 version=1
+READ     after replication      Primary=8 (v1) | Secondary=8 (v1)
+RESULT   Normal replication successful: both replicas return 8
+
+--- 2. Stale read test ---
+CONTROL Replication paused
+WRITE  Primary   stock=9 version=2
+READ     during replication pause Primary=9 (v2) | Secondary=8 (v1)
+RESULT   Stale read observed: Primary=9, Secondary=8
+
+--- 3. Recovery and convergence ---
+CONTROL Replication resumed
+REPLICATE Secondary stock=9 version=2
+READ     after recovery         Primary=9 (v2) | Secondary=9 (v2)
+RESULT   Convergence successful: both replicas return 9
